@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Document Verifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .api-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .api-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .api-key-generator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+        
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 123, 255, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .api-key-display {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #28a745;
+            margin-top: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .api-key-code {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            display: block;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 1px solid #dee2e6;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+        
+        .document-section {
+            margin-top: 30px;
+        }
+        
+        .file-upload {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(0, 123, 255, 0.05);
+            cursor: pointer;
+        }
+        
+        .file-upload:hover {
+            border-color: #0056b3;
+            background: rgba(0, 123, 255, 0.1);
+        }
+        
+        .file-upload.dragover {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+        
+        .file-list {
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .file-size {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .doc-type-select {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        .remove-file {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        
+        .remove-file:hover {
+            background: #c82333;
+        }
+        
+        .user-name-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .results-section {
+            margin-top: 30px;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .match-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .match-pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .match-fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+            margin-top: 5px;
+        }
+        
+        .annotated-image {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-top: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin: 10px 0;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin: 10px 0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .api-validation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .api-validation.valid {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .api-validation.invalid {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .api-key-generator {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 AI Document Verifier</h1>
+            <p>Secure document verification with advanced AI technology</p>
+        </div>
+        
+        <!-- API Key Generation Section -->
+        <div class="api-section">
+            <div class="section-title">
+                🔑 API Key Management
+            </div>
+            
+            <div class="api-key-generator">
+                <div class="input-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="company">Company/Organization</label>
+                    <input type="text" id="company" class="form-input" placeholder="Your Company">
+                </div>
+            </div>
+            
+            <button id="generateKey" class="btn btn-primary">Generate API Key</button>
+            
+            <div id="apiKeyDisplay" class="api-key-display hidden">
+                <h4>Your API Key:</h4>
+                <div class="api-key-code">
+                    <span id="apiKeyValue"></span>
+                    <button class="copy-btn" onclick="copyApiKey()">Copy</button>
+                </div>
+                <p><strong>⚠️ Important:</strong> Save this key securely. You'll need it for API requests.</p>
+            </div>
+        </div>
+        
+        <!-- API Key Validation Section -->
+        <div class="api-section">
+            <div class="section-title">
+                🔐 API Key Validation
+            </div>
+            
+            <div class="input-group">
+                <label for="apiKeyInput">API Key</label>
+                <input type="text" id="apiKeyInput" class="form-input" placeholder="Enter your API key">
+            </div>
+            
+            <button id="validateKey" class="btn btn-warning" style="margin-top: 10px;">Validate Key</button>
+            
+            <div id="validationResult" class="api-validation hidden">
+                <span id="validationMessage"></span>
+            </div>
+        </div>
+        
+        <!-- Document Processing Section -->
+        <div class="api-section document-section">
+            <div class="section-title">
+                📄 Document Processing
+            </div>
+            
+            <div class="user-name-section">
+                <div class="input-group">
+                    <label for="userName">User Name for Verification</label>
+                    <input type="text" id="userName" class="form-input" placeholder="Enter the name to verify against documents">
+                </div>
+            </div>
+            
+            <div class="file-upload" id="fileUpload">
+                <div style="font-size: 3em; margin-bottom: 15px;">📁</div>
+                <h3>Drop files here or click to select</h3>
+                <p>Supported formats: PDF, JPG, PNG, JPEG</p>
+                <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+            </div>
+            
+            <div id="fileList" class="file-list hidden">
+                <h4>Selected Files:</h4>
+                <div id="fileItems"></div>
+            </div>
+            
+            <button id="processFiles" class="btn btn-success hidden" style="margin-top: 20px;">Process Documents</button>
+        </div>
+        
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section hidden">
+            <div class="section-title">
+                📊 Processing Results
+            </div>
+            <div id="results"></div>
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processing documents...</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let currentApiKey = '';
+        
+        // Document types available
+        const documentTypes = [
+            "Aadhar Card",
+            "PAN Card", 
+            "Handicap smart card",
+            "Birth Certificate",
+            "Bonafide Certificate",
+            "Caste certificate",
+            "Current Month Salary Slip",
+            "Passport and VISA",
+            "Marksheet",
+            "Transgender Certificate"
+        ];
+        
+        // API Key Generation
+        document.getElementById('generateKey').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const company = document.getElementById('company').value;
+            
+            if (!email) {
+                showError('Email is required');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/generate_api_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, company })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('apiKeyValue').textContent = data.api_key;
+                    document.getElementById('apiKeyDisplay').classList.remove('hidden');
+                    currentApiKey = data.api_key;
+                    document.getElementById('apiKeyInput').value = data.api_key;
+                    showSuccess(data.message);
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error generating API key: ' + error.message);
+            }
+        });
+        
+        // API Key Validation
+        document.getElementById('validateKey').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            
+            if (!apiKey) {
+                showError('Please enter an API key');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/validate_api_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('validationResult');
+                const messageSpan = document.getElementById('validationMessage');
+                
+                resultDiv.classList.remove('hidden', 'valid', 'invalid');
+                
+                if (response.ok && data.valid) {
+                    resultDiv.classList.add('valid');
+                    messageSpan.textContent = `✅ Valid API key for ${data.email} (${data.company})`;
+                    currentApiKey = apiKey;
+                } else {
+                    resultDiv.classList.add('invalid');
+                    messageSpan.textContent = `❌ ${data.error}`;
+                    currentApiKey = '';
+                }
+            } catch (error) {
+                showError('Error validating API key: ' + error.message);
+            }
+        });
+        
+        // File Upload Handling
+        const fileUpload = document.getElementById('fileUpload');
+        const fileInput = document.getElementById('fileInput');
+        
+        fileUpload.addEventListener('click', () => fileInput.click());
+        
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+        
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+        
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        function handleFiles(files) {
+            for (let file of files) {
+                if (file.type.match(/^(application\/pdf|image\/(jpeg|jpg|png))$/)) {
+                    selectedFiles.push({
+                        file: file,
+                        name: file.name,
+                        size: file.size,
+                        type: 'auto-detect'
+                    });
+                }
+            }
+            updateFileList();
+        }
+        
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const fileItems = document.getElementById('fileItems');
+            const processBtn = document.getElementById('processFiles');
+            
+            if (selectedFiles.length === 0) {
+                fileList.classList.add('hidden');
+                processBtn.classList.add('hidden');
+                return;
+            }
+            
+            fileList.classList.remove('hidden');
+            processBtn.classList.remove('hidden');
+            
+            fileItems.innerHTML = '';
+            
+            selectedFiles.forEach((fileObj, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${fileObj.name}</div>
+                        <div class="file-size">${formatFileSize(fileObj.size)}</div>
+                    </div>
+                    <select class="doc-type-select" onchange="updateFileType(${index}, this.value)">
+                        <option value="auto-detect">Auto-detect</option>
+                        ${documentTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                    </select>
+                    <button class="remove-file" onclick="removeFile(${index})">Remove</button>
+                `;
+                
+                fileItems.appendChild(fileItem);
+            });
+        }
+        
+        function updateFileType(index, type) {
+            selectedFiles[index].type = type;
+        }
+        
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Process Documents
+        document.getElementById('processFiles').addEventListener('click', async () => {
+            if (!currentApiKey) {
+                showError('Please validate your API key first');
+                return;
+            }
+            
+            const userName = document.getElementById('userName').value.trim();
+            if (!userName) {
+                showError('Please enter a user name for verification');
+                return;
+            }
+            
+            if (selectedFiles.length === 0) {
+                showError('Please select at least one file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('user_name', userName);
+            
+            selectedFiles.forEach((fileObj, index) => {
+                formData.append('files', fileObj.file);
+                formData.append('confirmed_types', fileObj.type === 'auto-detect' ? '' : fileObj.type);
+            });
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/process_documents', {
+                    method: 'POST',
+                    headers: {
+                        'x-api-key': currentApiKey
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data.results);
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error processing documents: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        function displayResults(results) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsDiv = document.getElementById('results');
+            
+            resultsSection.classList.remove('hidden');
+            resultsDiv.innerHTML = '';
+            
+            results.forEach((result, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                
+                resultItem.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">${result.filename}</div>
+                        <div class="match-badge ${result.match_result === 'pass' ? 'match-pass' : 'match-fail'}">
+                            ${result.match_result === 'pass' ? '✅ Match' : '❌ No Match'} (${result.match_score}%)
+                        </div>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Document Type</div>
+                            <div class="detail-value">${result.doc_type}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Extracted Name</div>
+                            <div class="detail-value">${result.extracted_name || 'Not found'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">User Name</div>
+                            <div class="detail-value">${result.user_name}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Confidence</div>
+                            <div class="detail-value">${result.confidence !== null ? result.confidence : 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    ${result.fields && Object.keys(result.fields).length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Extracted Fields:</strong>
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;">
+                                ${Object.entries(result.fields).map(([key, value]) => 
+                                    `<div><strong>${key}:</strong> ${value}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${result.annotated_image ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Annotated Image:</strong>
+                            <img src="data:image/jpeg;base64,${result.annotated_image}" class="annotated-image" alt="Annotated document">
+                        </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 15px;">
+                        <strong>Raw Text:</strong>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.9em;">
+                            ${result.raw_text.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+                
+                resultsDiv.appendChild(resultItem);
+            });
+        }
+        
+        function showLoading(show) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+            } else {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.querySelector('.container').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            document.querySelector('.container').appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+        
+        function copyApiKey() {
+            const apiKey = document.getElementById('apiKeyValue').textContent;
+            navigator.clipboard.writeText(apiKey).then(() => {
+                showSuccess('API key copied to clipboard!');
+            }).catch(() => {
+                showError('Failed to copy API key');
+            });
+        }
+    </script>
+</body>
+</html>
